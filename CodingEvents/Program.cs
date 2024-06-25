@@ -1,10 +1,26 @@
-﻿using CodingEvents.Data;
+using CodingEvents.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+
+var connectionString = "server=localhost;user=codingevents;password=codingevents!;database=coding-events";
+var serverVersion = new MySqlServerVersion(new Version(8, 0, 36));
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<EventDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+builder.Services.AddDefaultIdentity<IdentityUser>(options => {
+   options.SignIn.RequireConfirmedAccount = true;
+   options.Password.RequireDigit = false;
+   options.Password.RequiredLength = 10;
+   options.Password.RequireNonAlphanumeric = false;
+   options.Password.RequireUppercase = true;
+   options.Password.RequireLowercase = false;
+}).AddEntityFrameworkStores<EventDbContext>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
 //--- MySql connection
 
@@ -12,10 +28,9 @@ builder.Services.AddControllersWithViews();
 // working with the .NET 6 (specifically the lack of a Startup.cs)
 //https://learn.microsoft.com/en-us/aspnet/core/migration/50-to-60-samples?view=aspnetcore-6.0#add-configuration-providers
 
-var connectionString = "server=localhost;user=codingevents;password=codingevents;database=coding-event";
-var serverVersion = new MySqlServerVersion(new Version(8, 0, 29));
 
-builder.Services.AddDbContext<EventDbContext>(dbContextOptions => dbContextOptions.UseMySql(connectionString, serverVersion));
+
+
 //--- end of connection syntax
 
 
@@ -33,8 +48,10 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
+app.MapRazorPages();
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "default",
